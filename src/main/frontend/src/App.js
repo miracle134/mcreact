@@ -1,5 +1,5 @@
 // import logo from './logo.svg';
-import React, {useRef, useState} from 'react';
+import React, {useRef, useReducer, useMemo, useCallback} from 'react';
 import './App.css';
 import Hello from "./Hello";
 import Wrapper from "./Wrapper";
@@ -13,22 +13,12 @@ function countActiveUsers(users){
     return users.filter(user => user.active).length;
 }
 
-function App() {
-    const [inputs, setInputs] = useState({
+const initialState = {
+    inputs: {
         username: '',
         email: ''
-    });
-    const {username, email} = inputs;
-    const onChange = e => {
-        const {name, value} = e.target;
-
-        setInputs({
-            ...inputs,
-            [name]: value
-        });
-    }
-
-    const [users, setUsers] = useState([
+    },
+    users: [
         {
             id: 1,
             username: 'velopert',
@@ -47,51 +37,39 @@ function App() {
             email: 'liz@example.com',
             active: false
         }
-    ]);
+    ]
+}
 
-    const nextId = useRef(4);
-    const onCreate = () => {
+function reducer(state, action) {
+    switch (action.type) {
+        case 'CHANGE_INPUT':
+            return {
 
-        if(!username || !email){
-            alert('값을 입력해주세요');
-            return;
-        }
+            }
+        default:
+            return state;
+    }
+}
 
-        const user = {
-            id: nextId.current,
-            username,
-            email
-        };
-        setUsers([...users, user]);
+function App() {
+    const [state, dispatch] = useReducer(reducer, initialState);
+    const {users} = state;
+    const {username, email} = state.inputs;
 
-        setInputs({
-            username: '',
-            email: ''
+    const onChange = useCallback(e => {
+        const { name, value } = e.target;
+        dispatch({
+            type: 'CHANGE_INPUT',
+            name,
+            value
         });
-        nextId.current += 1;
-    }
-
-    const onRemove = id => {
-        setUsers(users.filter(v => v.id !== id));
-        // setUsers(users.splice(id, 1));
-    }
-
-    const onToggle = id => {
-        setUsers(users.map(user => user.id === id
-            ? {...user, active: !user.active} : user));
-    }
-    const count = countActiveUsers(users);
+    }, []);
 
     return (
         <>
-            <CreateUser
-                username={username}
-                email={email}
-                onChange={onChange}
-                onCreate={onCreate}
-            />
-            <UserList users={users} onRemove={onRemove} onToggle={onToggle}/>
-            <div>활성사용자 수 : {count}</div>
+            <CreateUser username={username} email={email}/>
+            <UserList users={users}/>
+            <div>활성사용자 수 : 0</div>
         </>
     );
 }
